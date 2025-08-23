@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budgetillo – Statistici</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="fade-page">
+  <header class="app-header">
+    <h1>Budgetillo</h1>
+    <nav class="app-nav">
+      <a href="index.html">Acasă</a>
+      <a href="statistics.html" class="active">Statistici</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- Rezumat -->
+    <section class="balance-section">
+      <h2>Rezumat (luna curentă)</h2>
+      <p><strong>Sold inițial:</strong> <span id="start-initial">0 lei</span></p>
+      <p><strong>Venituri adăugate:</strong> <span id="incomes-total">0 lei</span></p>
+      <p><strong>Total cheltuieli:</strong> <span id="total-stat">0 lei</span></p>
+      <p><strong>Sold rămas:</strong> <span id="balance-stat">0 lei</span></p>
+    </section>
+
+    <!-- Grafic -->
+    <section>
+      <h2>Distribuția pe categorii</h2>
+      <canvas id="expensesChart" width="400" height="400"></canvas>
+    </section>
+
+    <!-- Lista categorii -->
+    <section>
+      <h2>Cheltuieli pe categorii</h2>
+      <ul id="category-list" class="expense-list"></ul>
+    </section>
+  </main>
+
+  <script src="statistics.js"></script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Budgetillo – Acasă</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="fade-page">
+  <header class="app-header">
+    <h1>Budgetillo</h1>
+    <nav class="app-nav">
+      <a href="index.html" class="active">Acasă</a>
+      <a href="statistics.html">Statistici</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- Sumar & Sold -->
+    <section class="balance-section" aria-labelledby="balance-title">
+      <h2 id="balance-title" class="visually-hidden">Sumar buget</h2>
+
+      <p id="current-month" style="opacity:.8;margin-bottom:.5rem;"></p>
+
+      <div class="balance-row">
+        <p><strong>Sold actual:</strong> <span id="balance">0 lei</span></p>
+        <p><strong>Total cheltuieli:</strong> <span id="total">0 lei</span></p>
+      </div>
+
+      <!-- Setare sold inițial -->
+      <div class="start-balance">
+        <label for="starting-balance">Sold inițial (lei):</label>
+        <input
+          type="number"
+          id="starting-balance"
+          placeholder="Ex: 2000"
+          min="0"
+          step="0.01"
+          inputmode="decimal"
+        />
+        <button type="button" id="set-balance">Setează sold</button>
+      </div>
+
+      <!-- Adăugare venit -->
+      <div class="extra-actions" style="margin-top:1rem;">
+        <label for="income-amount">Adaugă venit (lei):</label>
+        <input
+          type="number"
+          id="income-amount"
+          placeholder="Ex: 1000"
+          min="0.01"
+          step="0.01"
+          inputmode="decimal"
+        />
+        <button type="button" id="add-income">+ Adaugă venit</button>
+      </div>
+    </section>
+
+    <!-- Formular adăugare cheltuială -->
+    <section class="form-section" aria-labelledby="form-title">
+      <h2 id="form-title">Adaugă cheltuială</h2>
+
+      <form id="expense-form" autocomplete="off">
+        <div class="form-row">
+          <label for="category">Categorie:</label>
+          <select id="category" required>
+            <option value="" disabled selected>Alege categoria</option>
+            <option value="Chirie">🏠 Chirie</option>
+            <option value="Facturi">💡 Facturi</option>
+            <option value="Alimente">🥦 Alimente</option>
+            <option value="Restaurant/Fast food">🍔 Restaurant / Fast food</option>
+            <option value="Transport">🚗 Transport</option>
+            <option value="Sănătate">💊 Sănătate</option>
+            <option value="Educație">📚 Educație</option>
+            <option value="Haine">👗 Haine</option>
+            <option value="Hobby/Divertisment">🎮 Hobby / Divertisment</option>
+            <option value="Vacanțe">✈️ Vacanțe</option>
+            <option value="Cadouri/Evenimente">🎁 Cadouri / Evenimente</option>
+            <option value="Întreținere locuință">🛠️ Întreținere locuință</option>
+            <option value="Asigurări și taxe">📑 Asigurări & taxe</option>
+            <option value="Animale de companie">🐾 Animale de companie</option>
+            <option value="Economii">💰 Economii</option>
+            <option value="Altele">➕ Altele</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="amount">Sumă (lei):</label>
+          <input
+            type="number"
+            id="amount"
+            placeholder="Ex: 150"
+            min="0.01"
+            step="0.01"
+            inputmode="decimal"
+            required
+          />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit">Adaugă</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Listă cheltuieli -->
+    <section class="list-section" aria-labelledby="list-title">
+      <div class="list-header">
+        <h2 id="list-title">Cheltuieli înregistrate</h2>
+        <button type="button" id="clear-all" class="danger">Șterge tot</button>
+      </div>
+      <ul id="expense-list" class="expense-list"></ul>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
