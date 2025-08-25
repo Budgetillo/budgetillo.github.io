@@ -32,9 +32,10 @@ const addIncomeBtn = document.getElementById('add-income');
 // ===== Chei LocalStorage =====
 const LS = {
   EXPENSES: (m) => `expenses_${m}`,
-  STARTING: (m) => `startingBalance_${m}`,          // soldul „curent al lunii” (crește cu venituri)
-  STARTING_INITIAL: (m) => `startingInitial_${m}`,   // soldul setat la începutul lunii (reper)
-  ROLLOVER_FLAG: (m) => `rollover_done_${m}`,
+  STARTING: (m) => `startingBalance_${m}`,          // sold curent (crește cu venituri)
+  STARTING_INITIAL: (m) => `startingInitial_${m}`,   // reper: sold la începutul lunii
+  ROLLOVER_FLAG: (m) => `rollover_done_${m}`,        // ca să nu întrebăm de 2 ori în aceeași lună
+  APP_INIT: 'appInitialized'                         // marcat prima vizită
 };
 
 // ===== Helpers =====
@@ -55,33 +56,40 @@ const MONTH = currentMonthKey();
 const PREV = prevMonthKey();
 
 let expenses = readJSON(LS.EXPENSES(MONTH), []);
-let startingBalance = toNumber(localStorage.getItem(LS.STARTING(MONTH)), 2000);
+// IMPORTANT: default = 0 la prima vizită
+let startingBalance = toNumber(localStorage.getItem(LS.STARTING(MONTH)), 0);
+
+// reperul (soldul inițial al lunii) — dacă nu există, îl pornim cu startingBalance (care la prima vizită = 0)
 let startingInitial = localStorage.getItem(LS.STARTING_INITIAL(MONTH));
 startingInitial = startingInitial === null ? startingBalance : toNumber(startingInitial, startingBalance);
-// asigură existența reperului
 localStorage.setItem(LS.STARTING_INITIAL(MONTH), startingInitial);
 
-// ===== Calcul totaluri =====
+// ===== Totaluri =====
 function computeTotals(expArr = expenses, startBal = startingBalance) {
   const total = expArr.reduce((s, e) => s + toNumber(e.amount, 0), 0);
   const balance = startBal - total;
   return { total, balance };
 }
 
-// ===== Preluare sold rămas din luna trecută =====
+// ===== Preluare sold rămas din luna trecută (NU la prima vizită) =====
 function maybeRolloverFromPreviousMonth() {
+  const isFirstVisit = !localStorage.getItem(LS.APP_INIT);
+  if (isFirstVisit) return; // nu întrebăm la prima vizită
+
   const hasStartingCurrent = localStorage.getItem(LS.STARTING(MONTH)) !== null;
   const askedThisMonth = localStorage.getItem(LS.ROLLOVER_FLAG(MONTH)) === '1';
   if (hasStartingCurrent || askedThisMonth) return;
 
   const prevExpenses = readJSON(LS.EXPENSES(PREV), []);
-  const prevStart = toNumber(localStorage.getItem(LS.STARTING(PREV)), 2000);
+  const prevStart = toNumber(localStorage.getItem(LS.STARTING(PREV)), NaN);
+  if (!prevExpenses.length && !Number.isFinite(prevStart)) return; // n-avem ce prelua
+
+  const prevStartVal = Number.isFinite(prevStart) ? prevStart : 0;
   const prevTotals = prevExpenses.reduce((s, e) => s + toNumber(e.amount, 0), 0);
-  const prevBalance = prevStart - prevTotals;
+  const prevBalance = prevStartVal - prevTotals;
 
   const ok = confirm(`Vrei să preiei soldul rămas din luna trecută (${money(prevBalance)}) ca sold inițial pentru luna curentă?`);
   if (ok) {
-    // setăm atât soldul curent, cât și reperul de început de lună
     startingBalance = prevBalance < 0 ? 0 : prevBalance;
     startingInitial = startingBalance;
     localStorage.setItem(LS.STARTING(MONTH), startingBalance);
@@ -180,7 +188,7 @@ setBalanceBtn?.addEventListener('click', () => {
   const val = toNumber(startingBalanceInput?.value, NaN);
   if (!Number.isFinite(val) || val < 0) { startingBalanceInput?.focus(); return; }
   startingBalance = val;
-  // când utilizatorul setează explicit soldul lunii, actualizăm și reperul
+  // când utilizatorul setează explicit soldul, actualizăm și reperul pentru luna curentă
   startingInitial = startingBalance;
   localStorage.setItem(LS.STARTING(MONTH), startingBalance);
   localStorage.setItem(LS.STARTING_INITIAL(MONTH), startingInitial);
@@ -191,30 +199,40 @@ clearAllBtn?.addEventListener('click', () => {
   if (confirm('Ești sigur(ă) că vrei să ștergi toate cheltuielile din luna curentă?')) clearAll();
 });
 
-// Venituri: cresc soldul curent, dar NU modifică reperul (ca să putem afișa „Venituri adăugate”)
+// Venituri: cresc soldul curent, dar NU modifică reperul (ca să putem afișa „Venituri adăugate” în statistici)
 addIncomeBtn?.addEventListener('click', () => {
   const val = toNumber(incomeInput?.value, NaN);
   if (!Number.isFinite(val) || val <= 0) return alert("Introdu o sumă validă.");
   startingBalance += val;
   localStorage.setItem(LS.STARTING(MONTH), startingBalance);
-  // startingInitial rămâne neschimbat
   updateDisplay();
   incomeInput.value = '';
 });
 
 // ===== Init =====
 (function init() {
-  maybeRolloverFromPreviousMonth();
+  // marcăm prima vizită (și setăm default 0 la prima intrare)
+  const firstVisit = !localStorage.getItem(LS.APP_INIT);
+  if (firstVisit) {
+    // asigurăm 0 la prima lună
+    startingBalance = 0;
+    startingInitial = 0;
+    localStorage.setItem(LS.STARTING(MONTH), startingBalance);
+    localStorage.setItem(LS.STARTING_INITIAL(MONTH), startingInitial);
+    localStorage.setItem(LS.APP_INIT, '1');
+  } else {
+    // doar dacă NU e prima vizită mai întrebăm de rollover
+    maybeRolloverFromPreviousMonth();
+  }
 
-  // re-sync din storage în caz că s-a schimbat în rollover / set-balance
+  // re-sync din storage
   const sb = localStorage.getItem(LS.STARTING(MONTH));
   if (sb !== null) startingBalance = toNumber(sb, startingBalance);
-
   const si = localStorage.getItem(LS.STARTING_INITIAL(MONTH));
   if (si !== null) startingInitial = toNumber(si, startingInitial);
-  else localStorage.setItem(LS.STARTING_INITIAL(MONTH), startingInitial);
 
   if (startingBalanceInput) startingBalanceInput.value = startingBalance;
   renderExpenses();
   updateDisplay();
 })();
+
