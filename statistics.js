@@ -12,7 +12,7 @@ const incomesTotalEl = document.getElementById("incomes-total");
 const categoryList = document.getElementById("category-list");
 const chartCanvas = document.getElementById("expensesChart");
 
-// ===== LocalStorage chei lunare =====
+// ===== Chei lunare =====
 const MONTH = currentMonthKey();
 const EXP_KEY = `expenses_${MONTH}`;
 const START_KEY = `startingBalance_${MONTH}`;
@@ -20,10 +20,10 @@ const START_INIT_KEY = `startingInitial_${MONTH}`;
 
 // ===== Date din localStorage (pe luna curentă) =====
 const expenses = JSON.parse(localStorage.getItem(EXP_KEY)) || [];
-const startingBalance = parseFloat(localStorage.getItem(START_KEY)) || 2000;
+const startingBalance = Number.isFinite(parseFloat(localStorage.getItem(START_KEY)))
+  ? parseFloat(localStorage.getItem(START_KEY)) : 0; // default 0
 const startingInitial = Number.isFinite(parseFloat(localStorage.getItem(START_INIT_KEY)))
-  ? parseFloat(localStorage.getItem(START_INIT_KEY))
-  : startingBalance; // fallback dacă nu există reperul
+  ? parseFloat(localStorage.getItem(START_INIT_KEY)) : 0;
 
 // ===== Grupare pe categorii =====
 function groupByCategory(expenses) {
@@ -44,7 +44,7 @@ const total = expenses.reduce((s, e) => {
 const balance = startingBalance - total;
 const grouped = groupByCategory(expenses);
 
-// Venituri adăugate = cât a crescut soldul față de „soldul inițial al lunii”
+// Venituri adăugate = cât a crescut soldul curent față de soldul inițial al lunii
 const incomesAdded = Math.max(0, startingBalance - startingInitial);
 
 // ===== Actualizare UI =====
@@ -127,4 +127,3 @@ if (typeof Chart !== "undefined" && chartCanvas && Object.keys(grouped).length >
   msg.textContent = "Nu există date pentru grafic în luna curentă.";
   chartCanvas.replaceWith(msg);
 }
-
