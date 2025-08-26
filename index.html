@@ -33,7 +33,7 @@
         <input
           type="number"
           id="starting-balance"
-          placeholder="Ex: 2000"
+          placeholder="Ex: 0"
           min="0"
           step="0.01"
           inputmode="decimal"
@@ -65,21 +65,16 @@
           <label for="category">Categorie:</label>
           <select id="category" required>
             <option value="" disabled selected>Alege categoria</option>
-            <option value="Chirie">🏠 Chirie</option>
-            <option value="Facturi">💡 Facturi</option>
-            <option value="Alimente">🥦 Alimente</option>
-            <option value="Restaurant/Fast food">🍔 Restaurant / Fast food</option>
+            <option value="Supermarket">🛒 Supermarket</option>
+            <option value="Locuință">🏠 Locuință</option>
+            <option value="Facturi/Utilități">💡 Facturi / Utilități</option>
             <option value="Transport">🚗 Transport</option>
             <option value="Sănătate">💊 Sănătate</option>
+            <option value="Îmbrăcăminte">👗 Îmbrăcăminte</option>
+            <option value="Divertisment">🎮 Divertisment</option>
             <option value="Educație">📚 Educație</option>
-            <option value="Haine">👗 Haine</option>
-            <option value="Hobby/Divertisment">🎮 Hobby / Divertisment</option>
-            <option value="Vacanțe">✈️ Vacanțe</option>
-            <option value="Cadouri/Evenimente">🎁 Cadouri / Evenimente</option>
-            <option value="Întreținere locuință">🛠️ Întreținere locuință</option>
-            <option value="Asigurări și taxe">📑 Asigurări & taxe</option>
-            <option value="Animale de companie">🐾 Animale de companie</option>
-            <option value="Economii">💰 Economii</option>
+            <option value="Rate">💳 Rate</option>
+            <option value="Taxe/Impozite">📑 Taxe / Impozite</option>
             <option value="Altele">➕ Altele</option>
           </select>
         </div>
@@ -94,6 +89,17 @@
             step="0.01"
             inputmode="decimal"
             required
+          />
+        </div>
+
+        <!-- Detalii scurte legate de categorie (opțional) -->
+        <div class="form-row">
+          <label for="details">Detalii (opțional):</label>
+          <input
+            type="text"
+            id="details"
+            placeholder="Detalii (opțional)"
+            maxlength="60"
           />
         </div>
 
@@ -116,3 +122,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
