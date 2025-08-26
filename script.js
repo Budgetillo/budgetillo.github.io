@@ -17,6 +17,7 @@ function monthLabelRO(d = new Date()) {
 const form = document.getElementById('expense-form');
 const categorySelect = document.getElementById('category');
 const amountInput = document.getElementById('amount');
+const detailsInput = document.getElementById('details');
 
 const list = document.getElementById('expense-list');
 const totalDisplay = document.getElementById('total');
@@ -56,10 +57,10 @@ const MONTH = currentMonthKey();
 const PREV = prevMonthKey();
 
 let expenses = readJSON(LS.EXPENSES(MONTH), []);
-// IMPORTANT: default = 0 la prima vizită
+// Default = 0 la prima vizită
 let startingBalance = toNumber(localStorage.getItem(LS.STARTING(MONTH)), 0);
 
-// reperul (soldul inițial al lunii) — dacă nu există, îl pornim cu startingBalance (care la prima vizită = 0)
+// reperul (soldul inițial al lunii)
 let startingInitial = localStorage.getItem(LS.STARTING_INITIAL(MONTH));
 startingInitial = startingInitial === null ? startingBalance : toNumber(startingInitial, startingBalance);
 localStorage.setItem(LS.STARTING_INITIAL(MONTH), startingInitial);
@@ -71,10 +72,10 @@ function computeTotals(expArr = expenses, startBal = startingBalance) {
   return { total, balance };
 }
 
-// ===== Preluare sold rămas din luna trecută (NU la prima vizită) =====
+// ===== Rollover (doar după prima vizită) =====
 function maybeRolloverFromPreviousMonth() {
   const isFirstVisit = !localStorage.getItem(LS.APP_INIT);
-  if (isFirstVisit) return; // nu întrebăm la prima vizită
+  if (isFirstVisit) return;
 
   const hasStartingCurrent = localStorage.getItem(LS.STARTING(MONTH)) !== null;
   const askedThisMonth = localStorage.getItem(LS.ROLLOVER_FLAG(MONTH)) === '1';
@@ -82,7 +83,7 @@ function maybeRolloverFromPreviousMonth() {
 
   const prevExpenses = readJSON(LS.EXPENSES(PREV), []);
   const prevStart = toNumber(localStorage.getItem(LS.STARTING(PREV)), NaN);
-  if (!prevExpenses.length && !Number.isFinite(prevStart)) return; // n-avem ce prelua
+  if (!prevExpenses.length && !Number.isFinite(prevStart)) return;
 
   const prevStartVal = Number.isFinite(prevStart) ? prevStart : 0;
   const prevTotals = prevExpenses.reduce((s, e) => s + toNumber(e.amount, 0), 0);
@@ -97,6 +98,25 @@ function maybeRolloverFromPreviousMonth() {
   }
   localStorage.setItem(LS.ROLLOVER_FLAG(MONTH), '1');
 }
+
+// ===== Placeholder-uri pentru "Detalii" în funcție de categorie =====
+const DETAILS_HINT = {
+  "Supermarket": "Ex: cumpărături Carrefour, Lidl",
+  "Locuință": "Ex: chirie, reparații, mobilă",
+  "Facturi/Utilități": "Ex: curent, apă, internet",
+  "Transport": "Ex: benzină, motorină, bilete",
+  "Sănătate": "Ex: consult medical, pastile",
+  "Îmbrăcăminte": "Ex: pantofi, geacă",
+  "Divertisment": "Ex: cinema, jocuri, ieșiri",
+  "Educație": "Ex: curs, carte",
+  "Rate": "Ex: credit bancar, leasing",
+  "Taxe/Impozite": "Ex: rovinietă, impozit",
+  "Altele": "Ex: cadou, diverse"
+};
+categorySelect?.addEventListener('change', () => {
+  const ph = DETAILS_HINT[categorySelect.value] || "Detalii (opțional)";
+  if (detailsInput) detailsInput.placeholder = ph;
+});
 
 // ===== Render =====
 function renderExpenses() {
@@ -121,7 +141,8 @@ function addExpenseToList(exp) {
 
   const left = document.createElement('span');
   const dateStr = new Date(exp.date).toLocaleDateString('ro-RO');
-  left.textContent = `${exp.category} • ${money(exp.amount)} • ${dateStr}`;
+  const detailPart = exp.details ? ` • ${exp.details}` : '';
+  left.textContent = `${exp.category}${detailPart} • ${money(exp.amount)} • ${dateStr}`;
 
   const del = document.createElement('button');
   del.type = 'button';
@@ -143,11 +164,12 @@ function updateDisplay() {
 }
 
 // ===== CRUD =====
-function addExpense(category, amount) {
+function addExpense(category, amount, details) {
   const expense = {
     id: (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random()}`,
     category,
     amount: toNumber(amount, 0),
+    details: (details || '').trim(),
     date: new Date().toISOString()
   };
   expenses.push(expense);
@@ -175,13 +197,16 @@ form?.addEventListener('submit', e => {
   e.preventDefault();
   const category = (categorySelect?.value || '').trim();
   const amount = toNumber(amountInput?.value, NaN);
+  const details = detailsInput?.value || '';
 
   if (!category) { categorySelect?.focus(); return; }
   if (!Number.isFinite(amount) || amount <= 0) { amountInput?.focus(); return; }
 
-  addExpense(category, amount);
+  addExpense(category, amount, details);
   amountInput.value = '';
+  if (detailsInput) detailsInput.value = '';
   if (categorySelect) categorySelect.selectedIndex = 0;
+  detailsInput.placeholder = "Detalii (opțional)";
 });
 
 setBalanceBtn?.addEventListener('click', () => {
@@ -199,7 +224,7 @@ clearAllBtn?.addEventListener('click', () => {
   if (confirm('Ești sigur(ă) că vrei să ștergi toate cheltuielile din luna curentă?')) clearAll();
 });
 
-// Venituri: cresc soldul curent, dar NU modifică reperul (ca să putem afișa „Venituri adăugate” în statistici)
+// Venituri: cresc soldul curent, dar NU modifică reperul (pentru statistici corecte)
 addIncomeBtn?.addEventListener('click', () => {
   const val = toNumber(incomeInput?.value, NaN);
   if (!Number.isFinite(val) || val <= 0) return alert("Introdu o sumă validă.");
@@ -211,17 +236,14 @@ addIncomeBtn?.addEventListener('click', () => {
 
 // ===== Init =====
 (function init() {
-  // marcăm prima vizită (și setăm default 0 la prima intrare)
   const firstVisit = !localStorage.getItem(LS.APP_INIT);
   if (firstVisit) {
-    // asigurăm 0 la prima lună
     startingBalance = 0;
     startingInitial = 0;
     localStorage.setItem(LS.STARTING(MONTH), startingBalance);
     localStorage.setItem(LS.STARTING_INITIAL(MONTH), startingInitial);
     localStorage.setItem(LS.APP_INIT, '1');
   } else {
-    // doar dacă NU e prima vizită mai întrebăm de rollover
     maybeRolloverFromPreviousMonth();
   }
 
