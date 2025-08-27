@@ -69,7 +69,7 @@ if (Object.keys(grouped).length === 0) {
   });
 }
 
-// ===== Chart.js (dacă e disponibil) =====
+// ===== Chart.js =====
 if (typeof Chart !== "undefined" && chartCanvas && Object.keys(grouped).length > 0) {
   const ctx = chartCanvas.getContext("2d");
   const colors = [
@@ -127,3 +127,4 @@ if (typeof Chart !== "undefined" && chartCanvas && Object.keys(grouped).length >
   msg.textContent = "Nu există date pentru grafic în luna curentă.";
   chartCanvas.replaceWith(msg);
 }
+
